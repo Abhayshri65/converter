@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Currency Converter</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f1f1f1;
+      animation: colorCycle 5s infinite linear;
+      transition: background 0.5s ease-in-out;
+      flex-direction: column;
+    }
+
+    @keyframes colorCycle {
+      0% { background-color: #FF6347; }
+      10% { background-color: #32CD32; }
+      20% { background-color: #1E90FF; }
+      30% { background-color: #FFD700; }
+      40% { background-color: #FF8C00; }
+      50% { background-color: #800080; }
+      60% { background-color: #FF69B4; }
+      70% { background-color: #A52A2A; }
+      80% { background-color: #000000; }
+      90% { background-color: #FFFFFF; }
+      100% { background-color: #808080; }
+    }
+
+    .box {
+      position: relative;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    h2 {
+      font-size: 28px;
+      color: #007bff;
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+
+    select, input, button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+
+    input {
+      height: 44px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      width: 45%;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    #history {
+      margin-top: 20px;
+      max-height: 200px;
+      overflow-y: auto;
+      border-top: 2px solid #ccc;
+      padding-top: 10px;
+    }
+
+    .history-item {
+      padding: 5px 0;
+      font-size: 14px;
+      color: #333;
+    }
+
+    .dark-mode body {
+      background: #121212 !important;
+    }
+
+    .dark-mode .box {
+      background-color: #1e1e1e;
+      color: white;
+    }
+
+    .dark-mode input,
+    .dark-mode select,
+    .dark-mode button {
+      background-color: #333;
+      color: white;
+      border-color: #444;
+    }
+
+    .dark-mode #result {
+      color: #eee;
+    }
+
+    .bugs {
+      width: 120px;
+      margin-top: 20px;
+      display: none;
+    }
+
+    .dance {
+      display: block !important;
+      animation: wiggle 0.4s ease-in-out infinite alternate;
+    }
+
+    @keyframes wiggle {
+      0% { transform: rotate(-5deg); }
+      100% { transform: rotate(5deg); }
+    }
+
+    @media (max-width: 768px) {
+      .box {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="box">
+    <h2>Currency Converter</h2>
+    <input type="number" id="amount" placeholder="Enter Amount" />
+
+    <select id="fromCurrency"></select>
+    <select id="toCurrency"></select>
+
+    <div class="button-group">
+      <button onclick="convert()">Convert</button>
+      <button style="background-color:#dc3545;" onclick="resetConverter()">Reset</button>
+    </div>
+
+    <div id="result"></div>
+
+    <div id="history">
+      <h3>History</h3>
+    </div>
+  </div>
+
+  <img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExOGVrZGQ0eGQ4cDVvNm1ycG1rbjB0bTA5YmM1dm52YWRzMmR1OGt2ciZlcD12MV9naWZzX3NlYXJjaCZjdD1n/5UDsrMd6ctz6KDXyIo/200.webp"
+    class="bugs" id="bugsImg" alt="Dancing Bunny GIF" />
+
+  <script>
+    const fromSelect = document.getElementById("fromCurrency");
+    const toSelect = document.getElementById("toCurrency");
+    const resultDiv = document.getElementById("result");
+    const amountInput = document.getElementById("amount");
+    const historyDiv = document.getElementById("history");
+    const bugsImg = document.getElementById("bugsImg");
+
+    const currencies = ["USD", "EUR", "GBP", "INR", "JPY", "CAD", "AUD", "CHF", "SGD"];
+    currencies.forEach(cur => {
+      fromSelect.innerHTML += `<option value="${cur}">${cur}</option>`;
+      toSelect.innerHTML += `<option value="${cur}">${cur}</option>`;
+    });
+
+    async function convert() {
+      const amount = amountInput.value;
+      const from = fromSelect.value;
+      const to = toSelect.value;
+
+      if (!amount || amount <= 0) {
+        resultDiv.textContent = "Enter a valid amount.";
+        return;
+      }
+
+      try {
+        const url = `https://api.frankfurter.app/latest?amount=${amount}&from=${from}&to=${to}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        const converted = data.rates[to];
+        resultDiv.innerHTML = `${amount} ${from} = <strong>${converted}</strong> ${to}`;
+
+        // Sound
+        const coinSound = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.wav");
+        coinSound.play();
+
+        // Show + Animate Bugs
+        bugsImg.classList.add("dance");
+        setTimeout(() => bugsImg.classList.remove("dance"), 3000);
+
+        // Add to History
+        addHistory(amount, from, to, converted);
+        localStorage.setItem("currencyDefaults", JSON.stringify({ amount, from, to }));
+      } catch (err) {
+        resultDiv.textContent = "Conversion failed.";
+      }
+    }
+
+    function resetConverter() {
+      amountInput.value = "";
+      resultDiv.innerHTML = "";
+      fromSelect.value = "USD";
+      toSelect.value = "INR";
+      localStorage.removeItem("currencyDefaults");
+    }
+
+    function addHistory(amount, from, to, converted) {
+      const historyItem = document.createElement("div");
+      historyItem.classList.add("history-item");
+      historyItem.textContent = `${amount} ${from} → ${converted} ${to}`;
+      historyDiv.appendChild(historyItem);
+    }
+  </script>
+</body>
+</html>
